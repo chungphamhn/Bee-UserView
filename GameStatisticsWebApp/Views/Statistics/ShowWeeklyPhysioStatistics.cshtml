@@ -1,0 +1,52 @@
+﻿@model GameStatisticsWebApp.Models.ViewModel
+@{
+    ViewBag.Title = "User Statistics";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<br />
+<h2>Statistics for user: @Model.User.UserId</h2>
+<br />
+<button runat="server" id=tab1 OnClick="location.href='@Url.Action("ShowWeeklyPhysioStatistics", "Statistics", new { userId = Model.User.UserId })'" CommandArgument='@Model.User.UserId'>Weekly Statistics</button>
+<button runat="server" id=tab2 OnClick="location.href='@Url.Action("ShowDailyPhysioStatistics", "Statistics", new { userId = Model.User.UserId })'" CommandArgument='@Model.User.UserId'>Daily Statistics</button>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        <li id="previous-page"><a href="javascript:void(0)" aria-label=Previous><span aria-hidden=true>&laquo;</span></a></li>
+    </ul>
+</nav>
+<div id="loop">
+    @foreach (var item in Model.StatisticsWeek)
+    {
+        <div class="list-group">
+            <a href="javascript:void(0)" class="list-group-item active">
+                <h4 class="list-group-item-heading">
+                    Week: @item.StartingDate - @item.EndingDate
+                </h4>
+
+                <p class="list-group-item-text">
+                    Total number of Repetitions: @item.Statistics.Repetitions
+                    <br />
+                    Total playing time: @item.Statistics.TotalPlayingTime
+                    <br />
+                    Score: @item.Statistics.GameScore
+                    <br />
+                    Movement velocity: @item.Statistics.MoveVelocityAverage
+                    <br />
+                    Range of motion of repetitions. Minimum: @item.Statistics.MoveRangeMinimum, Maximum: @item.Statistics.MoveRangeMaximum, Average: @item.Statistics.MoveRangeAverage
+                    <br />
+                    Number of pauses: @item.Statistics.NumberOfPauses
+                    <br />
+                    Length of pauses: @item.Statistics.PauseLength
+                    <br />
+                </p>
+            </a>
+        </div>
+
+    }
+</div>
+<br />
+
+<br />
+<button id="index" onclick="location.href='@Url.Action("Index", "Statistics")'">Back to Start</button>
+

@@ -1,0 +1,110 @@
+﻿
+@model GameStatisticsWebApp.Models.Statistics
+@{
+    ViewBag.Title = "Physiotherapist Statistics";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br />
+<h2>@Model.Name</h2>
+<br />
+
+
+
+<form method="POST" action="@Url.Action("ShowPhysioStatistics", "Statistics")" class="js-ajax-php-json" name="action">
+
+    <input id="user_id" name="user_id" type="Text" required />
+    <input value="Select User" type="Submit" />
+
+</form>
+
+
+<br />
+<br />
+<button id="index" onclick="location.href='@Url.Action("Index", "Statistics")'">Back to Start</button>
+
+<script type="text/javascript">
+    $("document").ready(function () {
+        //get the form class
+        $(".js-ajax-php-json").submit(function () {
+
+            //get the user_id
+            var user_id = $('input[name="user_id"]').val();
+
+            //set the action to send to the processor
+            var data = {
+                "action": "getUserIDs"
+            };
+
+            //serialize data so the processor can read the serialization
+            data = $(this).serialize() + "&" + $.param(data);
+
+            //bool for checking if user id is correct, returns when finishes, determines outcome: continue/display message
+            var bool = false;
+
+            //ajax request
+            $.ajax({
+                type: "POST",
+                async: false,
+                dataType: "json",
+                url: '@Url.Action("AjaxUserCheck", "Statistics")',
+                data: data,
+                //execute userCheck on success
+                success: function (data) {
+
+                    if (userCheck(data, user_id)) {
+                        bool = true;
+                    }
+                    else {
+                        bool = false;
+                    }
+                },
+                //error message in console when errors/warnings
+                error: function (xhr, desc, err) {
+                    console.warn(xhr.responseText)
+                    console.log(xhr);
+                    console.log("Details: " + desc + "\nError:" + err);
+                },
+            });
+            //returns boolean
+            return bool;
+        });
+    });
+
+    //check if the user exists in user_ids array
+    function userCheck(returnData, user_id) {
+
+        var data = returnData;
+
+        //get the user ids from the array
+        var data = data.map(function (item) {
+            return item["UserId"];
+        });
+
+        //boolean from function if user id is found in array or not
+        var foundUserID = inArray(user_id, data);
+
+        if (foundUserID == true) {
+            return true;
+        }
+        if (foundUserID == false) {
+            alert("User ID does not exist in the database. Please fill in a valid user ID.");
+            return false;
+        }
+    }
+
+    //checks if the user id is in the array
+    function inArray(user_id, user_ids) {
+
+        var count = user_ids.length;
+
+        //for every id check if it exists
+        for (var i = 0; i < count; i++) {
+            if (user_ids[i] == user_id) {
+
+                return true;
+            }
+        }
+        return false;
+    }
+
+</script>

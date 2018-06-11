@@ -1,0 +1,12 @@
+﻿@model GameStatisticsWebApp.Models.Statistics
+@{
+    ViewBag.Title = "Statistics";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<br />
+<h2>@Model.Name</h2>
+
+<br/>
+<button id="user_statistics" onclick="location.href = '@Url.Action("User", "Statistics")'">Statistics for User</button>
+<button id="physio_statistics" onclick="location.href='@Url.Action("Physiotherapist", "Statistics")'">Statistics for Physiotherapist</button>
