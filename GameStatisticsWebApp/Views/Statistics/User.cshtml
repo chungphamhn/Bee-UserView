@@ -8,11 +8,14 @@
 <h2>@Model.Name</h2>
 <br />
 
+<!-- View for user where user can be selected in form
+    User Id is checked in Javascript which gives an Ajax call to the controller
+    -->
 
 
 <form method="POST" action="@Url.Action("ShowUserStatistics", "Statistics")" class="js-ajax-php-json" name="action">
 
-    <input id="user_id" name="user_id" type="Text" required  />
+    <input id="user_id" name="user_id" type="Text" required />
     <input value="Select User" type="Submit" />
 
 </form>
@@ -98,9 +101,9 @@
         var count = user_ids.length;
 
         //for every id check if it exists
-        for (var i = 0; i < count; i++) {  
+        for (var i = 0; i < count; i++) {
             if (user_ids[i] == user_id) {
-                
+
                 return true;
             }
         }

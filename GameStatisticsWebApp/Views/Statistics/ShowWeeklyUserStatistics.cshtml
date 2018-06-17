@@ -4,7 +4,9 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-
+<!--Switch between weekly and daily stats
+    Gives a call to the controller which sends the new view
+    -->
 
 <br />
 <h2>Statistics for user: @Model.User.UserId</h2>
@@ -12,28 +14,54 @@
 <button runat="server" id=tab1 OnClick="location.href='@Url.Action("ShowWeeklyUserStatistics", "Statistics", new { userId = Model.User.UserId })'" CommandArgument='@Model.User.UserId'>Weekly Statistics</button>
 <button runat="server" id=tab2 OnClick="location.href='@Url.Action("ShowDailyUserStatistics", "Statistics", new { userId = Model.User.UserId })'" CommandArgument='@Model.User.UserId'>Daily Statistics</button>
 
+<!--
+    Page navigation is done with javascript. Javascript file pagination.js in Scripts handles the pagination
+-->
 <nav aria-label="Page navigation">
     <ul class="pagination">
         <li id="previous-page"><a href="javascript:void(0)" aria-label=Previous><span aria-hidden=true>&laquo;</span></a></li>
     </ul>
 </nav>
+
+<!--
+    For each item in loop, create a new page    
+-->
 <div id="loop">
+
+    <!--
+        For each loops to display the items of the model lists
+    -->
     @foreach (var item in Model.StatisticsWeek)
     {
         <div class="list-group">
             <a href="javascript:void(0)" class="list-group-item active">
                 <h4 class="list-group-item-heading">
-                    Week: @item.StartingDate - @item.EndingDate
+                    <!--
+                        Display week with starting date and ending date
+                    -->
+                    Week: @item.StartingDate.ToShortDateString() - @item.EndingDate.ToShortDateString()
                 </h4>
 
-                <p class="list-group-item-text">
-                    Total number of Repetitions: @item.Statistics.Repetitions
-                    <br />
-                    Total playing time: @item.Statistics.TotalPlayingTime
-                    <br />
-                    Score: @item.Statistics.GameScore
-                    <br />
-                </p>
+                @foreach (var gameItem in item.Game)
+                {
+
+                    <h4 class="list-group-item-heading">
+                        Game Name: @gameItem.Name
+                    </h4>
+
+                    foreach (var statisticsItem in gameItem.Statistics)
+                    {
+
+                        <p class="list-group-item-text">
+                            Total number of Repetitions: @statisticsItem.Repetitions
+                            <br />
+                            Total playing time: @statisticsItem.TotalPlayingTime
+                            <br />
+                            Score: @statisticsItem.GameScore
+                            <br />
+                        </p>
+                    }
+                }
             </a>
         </div>
 

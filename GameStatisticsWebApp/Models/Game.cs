@@ -9,11 +9,10 @@ namespace GameStatisticsWebApp.Models
     //weeks and dates have games
     //games have statistics
     //all models have their own needed attributes
-    public class StatisticsWeek
+    public class Game
     {
-        public DateTime StartingDate { get; set; }
-        public DateTime EndingDate { get; set; }
-        public int Week { get; set; }
-        public List<Game> Game { get; set; }
+        public string Name { get; set; }
+        public int Id { get; set; }
+        public List<Statistics> Statistics { get; set; }
     }
 }
