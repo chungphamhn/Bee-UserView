@@ -1079,6 +1079,8 @@ namespace GameStatisticsWebApp.Controllers
         {
             games.Add(0, "Cave Game");
             games.Add(1, "Bubble Runner");
+            //add one more game 
+            games.Add(2, "Squat Pong");
 
             return games;
 

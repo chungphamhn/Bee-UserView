@@ -22,7 +22,19 @@
         <li id="previous-page"><a href="javascript:void(0)" aria-label=Previous><span aria-hidden=true>&laquo;</span></a></li>
     </ul>
 </nav>
+<style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
 
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+</style>
 <!--
     For each item in loop, create a new page
 -->
@@ -33,6 +45,7 @@
     -->
     @foreach (var item in Model.StatisticsDate)
     {
+        int count;
         <div class="list-group">
             <a href="javascript:void(0)" class="list-group-item active">
 
@@ -43,12 +56,29 @@
 
                 @foreach (var gameItem in item.Game)
                 {
+                    count = 0;
                     <h4 class="list-group-item-heading">
                         Game Name: @gameItem.Name
                     </h4>
 
-                    foreach (var statisticsItem in gameItem.Statistics)
-                    {
+                    <table>
+                        <tr>
+                            <th>Session No.</th>
+                            <th>Total Repetitions</th>
+                            <th>Total Playing Time</th>
+                            <th>Score</th>
+                        </tr>
+
+                        @foreach (var statisticsItem in gameItem.Statistics)
+                        {
+                            count++;
+                            <tr>
+                                <th>@count</th>
+                                <th>@statisticsItem.Repetitions</th>
+                                <th>@statisticsItem.TotalPlayingTime</th>
+                                <th>@statisticsItem.GameScore</th>
+                            </tr>
+                            @*
                         <p class="list-group-item-text">
                             Total number of Repetitions: @statisticsItem.Repetitions
                             <br />
@@ -58,7 +88,11 @@
                             <br />
                         </p>
                         <br />
-                    }
+                            *@
+                        }
+
+                    </table>
+                    <br/>
                 }
             </a>
         </div>
