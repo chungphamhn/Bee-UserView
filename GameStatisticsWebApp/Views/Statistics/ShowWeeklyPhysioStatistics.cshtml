@@ -9,6 +9,7 @@
     -->
 
 <br />
+
 <h2>Statistics for user: @Model.User.UserId</h2>
 <br />
 <button runat="server" id=tab1 OnClick="location.href='@Url.Action("ShowWeeklyPhysioStatistics", "Statistics", new { userId = Model.User.UserId })'" CommandArgument='@Model.User.UserId'>Weekly Statistics</button>
@@ -22,11 +23,18 @@
         <li id="previous-page"><a href="javascript:void(0)" aria-label=Previous><span aria-hidden=true>&laquo;</span></a></li>
     </ul>
 </nav>
+
 <style>
+    .ChartId {
+        width: 95%;
+        background-color: white;
+    }
     table {
         font-family: arial, sans-serif;
         border-collapse: collapse;
-        width: 100%;
+        width: 95%;
+        position: relative;
+        background-color: ghostwhite;
     }
 
     td, th {
@@ -34,85 +42,518 @@
         text-align: left;
         padding: 8px;
     }
+
+    .displayGameItem {
+        margin: auto;
+        display: none;
+        background-color: lightgreen;
+    }
+
+    #chartdiv {
+        width: 100%;
+        height: 500px;
+    }
+
+    #chartdiv2 {
+        width: 100%;
+        height: 500px;
+    }
+    #chartdiv3 {
+        width: 100%;
+        height: 500px;
+    }
 </style>
 <!--
     For each item in loop, create a new page
 -->
+
 <div id="loop">
 
     <!--
         For each loops to display the items of the model lists
     -->
-    @foreach (var item in Model.StatisticsWeek)
-    {
-        int count;
+
+    <h1></h1>
+    @foreach (var item in Model.StatisticsWeek) {
+
         <div class="list-group">
             <a href="javascript:void(0)" class="list-group-item active">
                 <h4 class="list-group-item-heading">
                     Week: @item.StartingDate.ToShortDateString() - @item.EndingDate.ToShortDateString()
                 </h4>
-
-                @foreach (var gameItem in item.Game)
-                {
-                    count = 0;
-                    <h4 class="list-group-item-heading">
-                        Game Name: @gameItem.Name
-                    </h4>
-                    <table>
-                        <tr>
-                            <th>Session No.</th>
-                            <th>Total Repetition</th>
-                            <th>Movement Velocity</th>
-                            <th>Total Playing Time</th>
-                            <th>Range Of Movement</th>
-                            <th>No. Of Pauses</th>
-                            <th>Length Of Pauses</th>
-                        </tr>
-                    @foreach (var statisticsItem in gameItem.Statistics) {
-                        count++;
-                        <tr>
-                            <th>@count</th>
-                            <th>@statisticsItem.Repetitions</th>
-                            <th>@statisticsItem.MoveVelocityAverage</th>
-                            <th>@statisticsItem.TotalPlayingTime</th>
-                            <th>
-                                Max: @statisticsItem.MoveRangeMaximum <br />
-                                Min: @statisticsItem.MoveRangeMinimum<br />
-                                Ave: @statisticsItem.MoveRangeAverage
-                            </th>
-                            <th>@statisticsItem.NumberOfPauses</th>
-                            <th>@statisticsItem.PauseLength</th>
-                        </tr>
-                        @*
-                        <p class="list-group-item-text">
-                            Total number of Repetitions: @statisticsItem.Repetitions
-                            <br />
-                            Total playing time: @statisticsItem.TotalPlayingTime
-                            <br />
-                            Score: @statisticsItem.GameScore
-                            <br />
-                            Movement velocity: @statisticsItem.MoveVelocityAverage
-                            <br />
-                            Range of motion of repetitions. Minimum: @statisticsItem.MoveRangeMinimum, Maximum: @statisticsItem.MoveRangeMaximum, Average: @statisticsItem.MoveRangeAverage
-                            <br />
-                            Number of pauses: @statisticsItem.NumberOfPauses
-                            <br />
-                            Length of pauses: @statisticsItem.PauseLength
-                            <br />
-                        </p>
-                        <br />
-                        *@
-                    }
-                    </table>
-                    <br/>
-                }
             </a>
-        </div>
+            @foreach (var gameItem in item.Game) {
+                string repetitionId = gameItem.Name.Replace(" ", "") + item.StartingDate.ToLongDateString().Replace("/", "").Replace(" ", "").Replace(",", "");
+                string totalPlayingTimeId = repetitionId + "weekTotalPlayingTime";
+                string movementVelocityId = repetitionId + "movement";
 
+                List<float> weekRepetition = new List<float> ();
+                List<string> dateTime = new List<string> ();
+                List<double> weekTotalPlayingTime = new List<double>();
+                List<float> weekMovementVelocity = new List<float>();
+                <a><br /></a>
+                <a class="list-group-item active">
+                    <div class="displayHeader">
+                        <h4 class="list-group-item-heading">
+                            Game Name: @gameItem.Name
+                        </h4>
+                    </div>
+                </a>
+
+                <div class="displayGameItem">
+                    <a><br /></a>
+                    <div align="center">
+                        <button class="button">Show Chart</button>
+                        <button class="button2">Show Table</button>
+                    </div>
+                    <div align="center" class="ShowChart">
+                        <a><br /></a>
+                        <button class="displayChart">Total Repetition</button>
+                        <button class="displayChart">Movement Velocity</button>
+                        <button class="displayChart">Total Playing Time</button>
+
+                        <div class="ChartId">
+                            <div id="@repetitionId"></div>
+                        </div>
+                        <div class="ChartId">
+                            <div id="@movementVelocityId"></div>
+                        </div>
+                        <div class="ChartId">
+                            <div id="@totalPlayingTimeId"></div>
+                        </div>
+                    </div>
+
+                    <div class="table">
+                        <a><br /></a>
+                        <table align="center">
+                            <tr>
+                                <th>Total Repetition</th>
+                                <th>Movement Velocity</th>
+                                <th>Total Playing Time</th>
+                                <th>Range Of Movement</th>
+                                <th>No. Of Pauses</th>
+                                <th>Length Of Pauses</th>
+                            </tr>
+                            @foreach (var statisticsItem in gameItem.Statistics) {
+
+                                for (var i = 0; i < statisticsItem.test2.Count; i++) {
+                                    weekMovementVelocity.Add((float)Math.Round(statisticsItem.weekMovementVelocity[i], 2));
+                                    double temp = Math.Round(statisticsItem.weekTotalPlayingTime[i].TotalMinutes, 2);
+                                    weekTotalPlayingTime.Add(temp);
+                                    dateTime.Add(statisticsItem.test2[i].ToShortDateString());
+                                    weekRepetition.Add(statisticsItem.weekRepetitions[i]);
+                                }
+                                <tr>
+                                    <th>@statisticsItem.Repetitions</th>
+                                    <th>@statisticsItem.MoveVelocityAverage</th>
+                                    <th>@statisticsItem.TotalPlayingTime</th>
+                                    <th>
+                                        Max: @statisticsItem.MoveRangeMaximum <br />
+                                        Min: @statisticsItem.MoveRangeMinimum<br />
+                                        Ave: @statisticsItem.MoveRangeAverage
+                                    </th>
+                                    <th>@statisticsItem.NumberOfPauses</th>
+                                    <th>@statisticsItem.PauseLength</th>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                    <style>
+                        #@repetitionId{
+                            width: 100%;
+                            height: 500px;
+                        }
+                        #@totalPlayingTimeId{
+                            width: 100%;
+                            height: 500px;
+                        }
+                        #@movementVelocityId{
+                            width: 100%;
+                            height: 500px;
+                        }
+                    </style>
+                    <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+                    <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+                    <script>
+                        var weekTotalRepetition = [];
+                        var weekTotalPlayingTime = [];
+                        var weekMovementVelocity = [];
+
+                        @for(int i = 0; i < dateTime.Count; i++) {
+
+                            <text>
+
+                                weekTotalRepetition.push({ "date": "@dateTime[i]", "value": @weekRepetition[i]});
+                                weekMovementVelocity.push({ "date": "@dateTime[i]", "value": @weekMovementVelocity[i]});
+                                weekTotalPlayingTime.push({ "date": "@dateTime[i]", "value": @weekTotalPlayingTime[i]});
+                            </text>
+                        }
+
+                    var @totalPlayingTimeId = AmCharts.makeChart("@totalPlayingTimeId", {
+                    "type": "serial",
+                    "theme": "light",
+                    "marginRight": 40,
+                    "marginLeft": 40,
+                    "autoMarginOffset": 20,
+                    "mouseWheelZoomEnabled": true,
+                    "dataDateFormat": "YYYY-MM-DD",
+                    "valueAxes": [{
+                        "id": "v1",
+                        "axisAlpha": 0,
+                        "position": "left",
+                        "title": "Minutes",
+                        "ignoreAxisWidth": true
+                    }],
+                    "balloon": {
+                        "borderThickness": 1,
+                        "shadowAlpha": 0
+                    },
+                    "graphs": [{
+                        "id": "g1",
+                        "balloon": {
+                            "drop": true,
+                            "adjustBorderColor": false,
+                            "color": "#ffffff"
+                        },
+                        "bullet": "round",
+                        "bulletBorderAlpha": 1,
+                        "bulletColor": "#FFFFFF",
+                        "bulletSize": 5,
+                        "hideBulletsCount": 50,
+                        "lineThickness": 2,
+                        "title": "red line",
+                        "useLineColorForBulletBorder": true,
+                        "valueField": "value",
+                        "balloonText": "<span style='font-size:18px;'>[[value]]</span>"
+                    }],
+                    "chartScrollbar": {
+                        "graph": "g1",
+                        "oppositeAxis": false,
+                        "offset": 30,
+                        "scrollbarHeight": 80,
+                        "backgroundAlpha": 0,
+                        "selectedBackgroundAlpha": 0.1,
+                        "selectedBackgroundColor": "#888888",
+                        "graphFillAlpha": 0,
+                        "graphLineAlpha": 0.5,
+                        "selectedGraphFillAlpha": 0,
+                        "selectedGraphLineAlpha": 1,
+                        "autoGridCount": true,
+                        "color": "#AAAAAA"
+                    },
+                    "chartCursor": {
+                        "pan": true,
+                        "valueLineEnabled": true,
+                        "valueLineBalloonEnabled": true,
+                        "cursorAlpha": 1,
+                        "cursorColor": "#258cbb",
+                        "limitToGraph": "g1",
+                        "valueLineAlpha": 0.2,
+                        "valueZoomable": true
+                    },
+                    "valueScrollbar": {
+                        "oppositeAxis": false,
+                        "offset": 50,
+                        "scrollbarHeight": 10
+                    },
+                    "categoryField": "date",
+                    "categoryAxis": {
+                        @*"parseDates": true,*@
+                        "dashLength": 1,
+                        "minorGridEnabled": true
+                    },
+                    "export": {
+                        "enabled": true
+                        },
+                        "dataProvider": weekTotalPlayingTime
+                });
+                    var @movementVelocityId = AmCharts.makeChart("@movementVelocityId", {
+                    "type": "serial",
+                    "theme": "light",
+                    "marginRight": 40,
+                    "marginLeft": 40,
+                    "autoMarginOffset": 20,
+                    "mouseWheelZoomEnabled": true,
+                    "dataDateFormat": "YYYY-MM-DD",
+                    "valueAxes": [{
+                        "id": "v1",
+                        "axisAlpha": 0,
+                        "position": "left",
+                        "title": "m/s",
+                        "ignoreAxisWidth": true
+                    }],
+                    "balloon": {
+                        "borderThickness": 1,
+                        "shadowAlpha": 0
+                    },
+                    "graphs": [{
+                        "id": "g1",
+                        "balloon": {
+                            "drop": true,
+                            "adjustBorderColor": false,
+                            "color": "#ffffff"
+                        },
+                        "bullet": "round",
+                        "bulletBorderAlpha": 1,
+                        "bulletColor": "#FFFFFF",
+                        "bulletSize": 5,
+                        "hideBulletsCount": 50,
+                        "lineThickness": 2,
+                        "title": "red line",
+                        "useLineColorForBulletBorder": true,
+                        "valueField": "value",
+                        "balloonText": "<span style='font-size:18px;'>[[value]]</span>"
+                    }],
+                    "chartScrollbar": {
+                        "graph": "g1",
+                        "oppositeAxis": false,
+                        "offset": 30,
+                        "scrollbarHeight": 80,
+                        "backgroundAlpha": 0,
+                        "selectedBackgroundAlpha": 0.1,
+                        "selectedBackgroundColor": "#888888",
+                        "graphFillAlpha": 0,
+                        "graphLineAlpha": 0.5,
+                        "selectedGraphFillAlpha": 0,
+                        "selectedGraphLineAlpha": 1,
+                        "autoGridCount": true,
+                        "color": "#AAAAAA"
+                    },
+                    "chartCursor": {
+                        "pan": true,
+                        "valueLineEnabled": true,
+                        "valueLineBalloonEnabled": true,
+                        "cursorAlpha": 1,
+                        "cursorColor": "#258cbb",
+                        "limitToGraph": "g1",
+                        "valueLineAlpha": 0.2,
+                        "valueZoomable": true
+                    },
+                    "valueScrollbar": {
+                        "oppositeAxis": false,
+                        "offset": 50,
+                        "scrollbarHeight": 10
+                    },
+                    "categoryField": "date",
+                    "categoryAxis": {
+                        @*"parseDates": true,*@
+                        "dashLength": 1,
+                        "minorGridEnabled": true
+                    },
+                    "export": {
+                        "enabled": true
+                    },
+                        "dataProvider": weekMovementVelocity
+                        });
+
+                        var @repetitionId = AmCharts.makeChart("@repetitionId", {
+                            "type": "serial",
+                            "theme": "light",
+                            "marginRight": 40,
+                            "marginLeft": 40,
+                            "autoMarginOffset": 20,
+                            "mouseWheelZoomEnabled": true,
+                            "dataDateFormat": "YYYY-MM-DD",
+                            "valueAxes": [{
+                                "id": "v1",
+                                "axisAlpha": 0,
+                                "position": "left",
+                                "title": "Number",
+                                "ignoreAxisWidth": true
+                            }],
+                            "balloon": {
+                                "borderThickness": 1,
+                                "shadowAlpha": 0
+                            },
+                            "graphs": [{
+                                "id": "g1",
+                                "balloon": {
+                                    "drop": true,
+                                    "adjustBorderColor": false,
+                                    "color": "#ffffff"
+                                },
+                                "bullet": "round",
+                                "bulletBorderAlpha": 1,
+                                "bulletColor": "#FFFFFF",
+                                "bulletSize": 5,
+                                "hideBulletsCount": 50,
+                                "lineThickness": 2,
+                                "title": "red line",
+                                "useLineColorForBulletBorder": true,
+                                "valueField": "value",
+                                "balloonText": "<span style='font-size:18px;'>[[value]]</span>"
+                            }],
+                            "chartScrollbar": {
+                                "graph": "g1",
+                                "oppositeAxis": false,
+                                "offset": 30,
+                                "scrollbarHeight": 80,
+                                "backgroundAlpha": 0,
+                                "selectedBackgroundAlpha": 0.1,
+                                "selectedBackgroundColor": "#888888",
+                                "graphFillAlpha": 0,
+                                "graphLineAlpha": 0.5,
+                                "selectedGraphFillAlpha": 0,
+                                "selectedGraphLineAlpha": 1,
+                                "autoGridCount": true,
+                                "color": "#AAAAAA"
+                            },
+                            "chartCursor": {
+                                "pan": true,
+                                "valueLineEnabled": true,
+                                "valueLineBalloonEnabled": true,
+                                "cursorAlpha": 1,
+                                "cursorColor": "#258cbb",
+                                "limitToGraph": "g1",
+                                "valueLineAlpha": 0.2,
+                                "valueZoomable": true
+                            },
+                            "valueScrollbar": {
+                                "oppositeAxis": false,
+                                "offset": 50,
+                                "scrollbarHeight": 10
+                            },
+                            "categoryField": "date",
+                            "categoryAxis": {
+                        @* "parseDates": true,*@
+                        "dashLength": 1,
+                            "minorGridEnabled": true
+                    },
+                        "export": {
+                            "enabled": true
+                        },"dataProvider": weekTotalRepetition
+
+                        });
+
+                        RepetitionChart.addListener("rendered", zoomChart);
+                        //weekMovementChart.addListener("rendered", zoomChart2);
+                        //weekPlayingTime.addListener("rendered", zoomChart3);
+
+                        zoomChart();
+
+
+                        function zoomChart() {
+                            chart.zoomToIndexes(chart.dataProvider.length - 40, chart.dataProvider.length - 1);
+                        }
+
+                    </script>
+
+                    <br />
+                </div>
+            }
+
+        </div>        
     }
 </div>
-<br />
+<script>
+    $(document).ready(function () {
+        $(".displayChart").click(function () {
+            var index = $(".displayChart").index(this);
 
-<br />
+            var chartId = document.getElementsByClassName("ChartId");
+            var button = document.getElementsByClassName("displayChart");
+
+            chartId[index].style.display = "block";
+            button[index].style.backgroundColor = "green";
+
+            for (var i = 0; i < chartId.length; i++) {
+                if (i != index) {
+                    chartId[i].style.display = "none";
+                }
+            }
+            for (var i = 0; i < button.length; i++) {
+                if (i != index)
+                    button[i].style.backgroundColor = '#e7e7e7';
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        $(".displayHeader").click(function () {
+            var index = $(".displayHeader").index(this);
+            var displayGameItem = document.getElementsByClassName("displayGameItem");
+            var displayTable = document.getElementsByClassName("table");
+            var ShowChart = document.getElementsByClassName("ShowChart");
+            var button2 = document.getElementsByClassName("button2");
+
+
+            displayTable[index].style.display = "block";
+            ShowChart[index].style.display = "none";
+
+
+            if (displayGameItem[index].style.display == "block") {
+                displayGameItem[index].style.display = "none";
+            } else {
+                displayGameItem[index].style.display = "block";
+
+            }
+
+            for (var i = 0; i < displayGameItem.length; i++) {
+                if (i != index) {
+                    displayGameItem[i].style.display = "none";
+                }
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        $(".button").click(function () {
+            var index = $(".button").index(this);
+            var displayTable = document.getElementsByClassName("table");
+            var ShowChart = document.getElementsByClassName("ShowChart");
+            var button = document.getElementsByClassName("button");
+            var chartId = document.getElementsByClassName("ChartId");
+            var displayChart = document.getElementsByClassName("displayChart");
+
+            displayTable[index].style.display = "none";
+            ShowChart[index].style.display = "block";
+            chartId[index * 3].style.display = "block";
+            displayChart[index * 3].style.backgroundColor = "green";
+            for (var i = 0; i < chartId.length; i++) {
+                if (i != (index * 3)) {
+                    chartId[i].style.display = "none";
+                }
+            }
+
+            for (var i = 0; i < displayChart.length; i++) {
+                if (i != (index * 3)) {
+                    displayChart[i].style.backgroundColor = "#e7e7e7";
+                }
+            }
+
+
+            for (var i = 0; i < ShowChart.length; i++) {
+                if (i != index) {
+                    ShowChart[i].style.display = "none";
+                    displayTable[i].style.display = "none";
+                }
+            }
+        });
+    });
+    $(document).ready(function () {
+        $(".button2").click(function () {
+            var index = $(".button2").index(this);
+
+            var table = document.getElementsByClassName("table");
+            var ShowChart = document.getElementsByClassName("ShowChart");
+
+            table[index].style.display = "block";
+
+
+            for (var i = 0; i < table.length; i++) {
+                if (i != index && table[i].style.display == "block")
+                    table[i].style.display = "none";
+            }
+
+
+            for (var i = 0; i < ShowChart.length; i++) {
+
+                if (ShowChart[i].style.display == "block")
+                    ShowChart[i].style.display = "none";
+            }
+        });
+    });
+
+</script>
 <button id="index" onclick="location.href='@Url.Action("Index", "Statistics")'">Back to Start</button>
 

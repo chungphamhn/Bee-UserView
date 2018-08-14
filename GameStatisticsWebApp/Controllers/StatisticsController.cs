@@ -76,7 +76,6 @@ namespace GameStatisticsWebApp.Controllers
         public string gameName;
         Dictionary<int, string> games = new Dictionary<int, string>();
 
-
         // GET: Statistics
         public ActionResult Index()
         {
@@ -181,11 +180,14 @@ namespace GameStatisticsWebApp.Controllers
         {
             //get weekly statistics
             statisticsWeekList = GetWeeklyPhysioStatistics(userId);
+            //statisticsDateList = GetDailyPhysioStatistics(userId);
 
             var viewModel = new ViewModel();
 
             //add statistics to viewmodel
             viewModel.StatisticsWeek = statisticsWeekList;
+            //viewModel.StatisticsDate = statisticsDateList;
+
             var user = new User() { UserId = userId };
 
             viewModel.User = user;
@@ -346,9 +348,7 @@ namespace GameStatisticsWebApp.Controllers
             return statisticsDateList;
 
         }
-
-        public List<StatisticsDate> GetDailyPhysioStatistics(int userId)
-        {
+        public List<StatisticsDate> GetDailyPhysioStatistics(int userId) {
             SqlConnection conn = GetSqlConnection();
             conn.Open();
 
@@ -377,6 +377,7 @@ namespace GameStatisticsWebApp.Controllers
             endTimeString = "./endTime";
             gameString = "./gameID";
 
+
             //Node iterator for user
             NodeIter = nav.Select(strExpression + "[playerID=" + userId + "]");
 
@@ -386,16 +387,14 @@ namespace GameStatisticsWebApp.Controllers
             games = GetGames();
 
             //for user session iterate through:
-            foreach (XPathNavigator item in NodeIter)
-            {
+            foreach (XPathNavigator item in NodeIter) {
                 lastDate = parsedDate;
                 Node = item.Select(dateString);
                 dateInput = GetStringValue(Node);
                 parsedDate = DateTime.Parse(dateInput);
 
                 //create only new statisticsDate when then last date was not the same date as the new one -> otherwise it would create a new date for each session, even when it's the same date
-                if (lastDate.Date != parsedDate.Date)
-                {
+                if (lastDate.Date != parsedDate.Date) {
                     statisticsDate = new StatisticsDate() { Date = parsedDate.Date };
                     gameList = new List<Game>();
                 }
@@ -403,8 +402,7 @@ namespace GameStatisticsWebApp.Controllers
                 NodeDate = nav.Select(strExpression + "[time='" + dateInput + "']");
 
                 //for each date iterate through and save statistics for date
-                foreach (XPathNavigator dateItem in NodeDate)
-                {
+                foreach (XPathNavigator dateItem in NodeDate) {
                     Node = dateItem.Select(gameString);
                     gameID = GetIntValue(Node);
                     gameName = GetGameName(games, gameID);
@@ -413,16 +411,14 @@ namespace GameStatisticsWebApp.Controllers
                     bool containsItem = gameList.Any(i => i.Id == gameID);
 
                     //if game is not there yet, create a new game, otherwise add to existing game statistics
-                    if (containsItem == false)
-                    {
+                    if (containsItem == false) {
                         game = new Game();
                         game.Name = gameName;
                         game.Id = gameID;
                         statisticsList = new List<Statistics>();
                     }
 
-                    else
-                    {
+                    else {
                         game = gameList.Find(x => x.Id == gameID);
                     }
 
@@ -430,9 +426,8 @@ namespace GameStatisticsWebApp.Controllers
                     NodeGame = dateItem.Select(strExpression + "[gameID='" + gameID + "']" + "[time='" + dateInput + "']");
 
                     //for each date iterate through and save statistics for game
-                    foreach (XPathNavigator gameItem in NodeGame)
-                    {
-                         statistics = new Statistics() { Name = "User Statistics" };
+                    foreach (XPathNavigator gameItem in NodeGame) {
+                        statistics = new Statistics() { Name = "User Statistics" };
 
                         //select repetitions nodes
                         Node = dateItem.Select(repetitions);
@@ -469,6 +464,63 @@ namespace GameStatisticsWebApp.Controllers
 
                         Node = dateItem.Select(sessionPauseString);
                         statistics.PauseLength = CalculatePauseLength(Node);
+                        //testing
+                        Node = gameItem.Select("//value");
+
+                        XPathNodeIterator dateTimeNode = gameItem.Select("//dateTime");
+                        String dateTimeN = dateTimeNode.ToString();
+                        XPathNodeIterator valueNode = gameItem.Select("//value");
+                        DateTime firstCountDateTime = new DateTime();
+                        DateTime lastCountDateTime = new DateTime();
+                        String previousSign = "";
+                        String currentSign = "";
+
+                        if (dateTimeNode.MoveNext() && valueNode.MoveNext() && gameID == 2) {
+                            firstCountDateTime = DateTime.Parse(dateTimeNode.Current.Value);
+                            if (float.Parse(valueNode.Current.Value) > 0) {
+                                previousSign = "+";
+                            }
+                            else {
+                                previousSign = "-";
+                            }
+                        }
+
+
+                        while (dateTimeNode.MoveNext() && valueNode.MoveNext() && gameID == 2) {
+
+                            lastCountDateTime = DateTime.Parse(dateTimeNode.Current.Value);
+
+                            if (float.Parse(valueNode.Current.Value) > 0) {
+                                currentSign = "+";
+                            }
+                            else {
+                                currentSign = "-";
+                            }
+                            if (dateTimeNode.Current.Value == "2018-05-15T14:49:51.8950108+03:00") {
+                                break;
+                            }
+
+                            if (currentSign != previousSign) {
+
+                                TimeSpan timeSpan = lastCountDateTime - firstCountDateTime;
+
+                                if (timeSpan < new TimeSpan(0, 0, 0)) {
+                                    String test = dateTimeNode.Current.Value;
+                                    String GameID = gameID.ToString();
+                                }
+
+                                if (previousSign == "+") {
+                                    statistics.TimeKeptBodyOnRight += timeSpan;
+                                }
+                                else {
+                                    statistics.TimeKeptBodyOnLeft += timeSpan;
+                                }
+                                timeSpan = new TimeSpan(0, 0, 0);
+                                previousSign = currentSign;
+                                firstCountDateTime = lastCountDateTime;
+                            }
+
+                        }
 
                         statisticsList.Add(statistics);
 
@@ -492,6 +544,152 @@ namespace GameStatisticsWebApp.Controllers
 
             return statisticsDateList;
         }
+
+        //public List<StatisticsDate> GetDailyPhysioStatistics(int userId)
+        //{
+        //    SqlConnection conn = GetSqlConnection();
+        //    conn.Open();
+
+        //    SqlCommand command = GetSqlDailyCommand(conn, userId);
+
+        //    //create XML reader and XPathDocument to read the XML
+        //    XmlReader reader = command.ExecuteXmlReader();
+        //    xpathDoc = new XPathDocument(reader, XmlSpace.Preserve);
+
+        //    //create a navigator to iterate through nodes
+        //    //String variables are the different nodes to iterate through
+        //    nav = xpathDoc.CreateNavigator();
+
+        //    strExpression = "//ArrayOfCompletedSession/CompletedSession";
+        //    sessionTime = "./sessionTime";
+        //    repetitions = "./repetitions";
+        //    scoreString = "./gameScore";
+        //    dateString = "./time";
+        //    moveRangeMaximumString = "./moveRangeMaximum";
+        //    moveRangeMinimumString = "./moveRangeMinimum";
+        //    moveRangeAverageString = "./moveRangeAverage";
+        //    moveVelocityAverageString = "./moveVelocityAverage";
+        //    gamePausesString = "./gamePauses";
+        //    sessionPauseString = "./gamePauses/SessionPause";
+        //    startTimeString = "./startTime";
+        //    endTimeString = "./endTime";
+        //    gameString = "./gameID";
+
+        //    //Node iterator for user
+        //    NodeIter = nav.Select(strExpression + "[playerID=" + userId + "]");
+
+        //    statisticsDateList = new List<StatisticsDate>();
+        //    gameList = new List<Game>();
+        //    statisticsList = new List<Statistics>();
+        //    games = GetGames();
+
+        //    //for user session iterate through:
+        //    foreach (XPathNavigator item in NodeIter)
+        //    {
+        //        lastDate = parsedDate;
+        //        Node = item.Select(dateString);
+        //        dateInput = GetStringValue(Node);
+        //        parsedDate = DateTime.Parse(dateInput);
+
+        //        //create only new statisticsDate when then last date was not the same date as the new one -> otherwise it would create a new date for each session, even when it's the same date
+        //        if (lastDate.Date != parsedDate.Date)
+        //        {
+        //            statisticsDate = new StatisticsDate() { Date = parsedDate.Date };
+        //            gameList = new List<Game>();
+        //        }
+
+        //        NodeDate = nav.Select(strExpression + "[time='" + dateInput + "']");
+
+        //        //for each date iterate through and save statistics for date
+        //        foreach (XPathNavigator dateItem in NodeDate)
+        //        {
+        //            Node = dateItem.Select(gameString);
+        //            gameID = GetIntValue(Node);
+        //            gameName = GetGameName(games, gameID);
+
+        //            //check if game already is in gameList
+        //            bool containsItem = gameList.Any(i => i.Id == gameID);
+
+        //            //if game is not there yet, create a new game, otherwise add to existing game statistics
+        //            if (containsItem == false)
+        //            {
+        //                game = new Game();
+        //                game.Name = gameName;
+        //                game.Id = gameID;
+        //                statisticsList = new List<Statistics>();
+        //            }
+
+        //            else
+        //            {
+        //                game = gameList.Find(x => x.Id == gameID);
+        //            }
+
+        //            //X Path expression to select nodes
+        //            NodeGame = dateItem.Select(strExpression + "[gameID='" + gameID + "']" + "[time='" + dateInput + "']");
+
+        //            //for each date iterate through and save statistics for game
+        //            foreach (XPathNavigator gameItem in NodeGame)
+        //            {
+        //                 statistics = new Statistics() { Name = "User Statistics" };
+
+        //                //select repetitions nodes
+        //                Node = dateItem.Select(repetitions);
+        //                //calculate total repetitions with selected node
+        //                statistics.Repetitions = GetTotalRepetitions(Node);
+
+        //                //select sessionTime node
+        //                Node = dateItem.Select(sessionTime);
+        //                statistics.TotalPlayingTime = GetTotalPlayingTime(Node);
+
+        //                //select node
+        //                Node = dateItem.Select(moveRangeMaximumString);
+        //                statistics.MoveRangeMaximum = GetValue(Node);
+
+        //                //select node
+        //                Node = dateItem.Select(moveRangeMinimumString);
+        //                statistics.MoveRangeMinimum = GetValue(Node);
+
+        //                //select node
+        //                Node = dateItem.Select(moveRangeAverageString);
+        //                statistics.MoveRangeAverage = GetValue(Node);
+
+        //                //select node
+        //                Node = dateItem.Select(moveVelocityAverageString);
+        //                statistics.MoveVelocityAverage = GetValue(Node);
+
+        //                //select node
+        //                Node = dateItem.Select(scoreString);
+        //                statistics.GameScore = GetValue(Node);
+
+        //                //select node
+        //                Node = dateItem.Select(gamePausesString);
+        //                statistics.NumberOfPauses = CalculateGamePauses(Node);
+
+        //                Node = dateItem.Select(sessionPauseString);
+        //                statistics.PauseLength = CalculatePauseLength(Node);
+
+        //                statisticsList.Add(statistics);
+
+        //            }
+        //            game.Statistics = statisticsList;
+
+        //            //add game to list if it's not there yet
+        //            if (containsItem == false)
+        //                gameList.Add(game);
+
+        //            statisticsDate.Game = gameList;
+
+        //        }
+
+        //        if (lastDate.Date != parsedDate.Date)
+        //            statisticsDateList.Add(statisticsDate);
+        //    }
+
+        //    //disconnect from server
+        //    conn.Close();
+
+        //    return statisticsDateList;
+        //}
 
         //get the weekly statistics for one user
         public List<StatisticsWeek> GetWeeklyUserStatistics(int userId)
@@ -643,6 +841,7 @@ namespace GameStatisticsWebApp.Controllers
             sessionTime = "./sessionTime";
             repetitions = "./repetitions";
             scoreString = "./CompletedSession/gameScore";
+            dateString = "./time";
             moveRangeMaximumString = "./moveRangeMaximum";
             moveRangeMinimumString = "./moveRangeMinimum";
             moveRangeAverageString = "./moveRangeAverage";
@@ -655,7 +854,6 @@ namespace GameStatisticsWebApp.Controllers
 
             statisticsWeekList = new List<StatisticsWeek>();
 
-            //get list of games
             games = GetGames();
 
             for (var counter = 1; counter <= weekCount; counter++)
@@ -730,17 +928,29 @@ namespace GameStatisticsWebApp.Controllers
 
                     NodeGame = item.Select(strExpression + "/CompletedSession" + "[gameID='" + gameID + "']");
 
+                    statistics.test2 = new List<DateTime>();
+                    statistics.weekMovementVelocity = new List<float>();
+                    statistics.weekRepetitions = new List<int>();
+                    statistics.weekTotalPlayingTime = new List<TimeSpan>();
+
+
                     foreach (XPathNavigator gameItem in NodeGame)
                     {
+                        //
+                        Node = gameItem.Select(dateString);
+                        statistics.test2.Add(DateTime.Parse(GetStringValue(Node)).Date);
+
                         //select repetitions nodes
                         Node = gameItem.Select(repetitions);
                         //calculate total repetitions with selected node
                         statistics.Repetitions += GetTotalRepetitions(Node);
+                        statistics.weekRepetitions.Add(GetTotalRepetitions(Node));
 
                         //select sessionTime node
                         Node = gameItem.Select(sessionTime);
                         totalPlayingTimeResult = totalPlayingTimeResult.Add(GetTotalPlayingTime(Node));
                         statistics.TotalPlayingTime = totalPlayingTimeResult;
+                        statistics.weekTotalPlayingTime.Add(GetTotalPlayingTime(Node));
 
                         //select node
                         Node = gameItem.Select(scoreString);
@@ -761,6 +971,7 @@ namespace GameStatisticsWebApp.Controllers
                         //select node
                         Node = gameItem.Select(moveVelocityAverageString);
                         statistics.MoveVelocityAverage = GetWeeklyMoveVelocityAverageValue(Node);
+                        statistics.weekMovementVelocity.Add(GetWeeklyMoveVelocityAverageValue(Node));
 
                         //select node
                         Node = gameItem.Select(gamePausesString);
@@ -768,6 +979,8 @@ namespace GameStatisticsWebApp.Controllers
 
                         Node = gameItem.Select(sessionPauseString);
                         statistics.PauseLength += CalculatePauseLength(Node);
+
+
                     }
 
                     //add statistics to list if it hasn't any (so it only carries out 1 time)
@@ -938,8 +1151,9 @@ namespace GameStatisticsWebApp.Controllers
             //for every node
             foreach (XPathNavigator i in Node)
             {
-                valueFloat = float.Parse(i.Value, System.Globalization.NumberStyles.AllowDecimalPoint,
-                    System.Globalization.NumberFormatInfo.InvariantInfo);
+                valueFloat = float.Parse(i.Value);
+                //valueFloat = float.Parse(i.Value, System.Globalization.NumberStyles.AllowDecimalPoint,
+                //    System.Globalization.NumberFormatInfo.InvariantInfo);
             }
             return valueFloat;
         }
@@ -950,8 +1164,9 @@ namespace GameStatisticsWebApp.Controllers
             //for every node
             foreach (XPathNavigator i in Node)
             {
-                valueFloat = float.Parse(i.Value, System.Globalization.NumberStyles.AllowDecimalPoint,
-                    System.Globalization.NumberFormatInfo.InvariantInfo);
+                valueFloat = float.Parse(i.Value);
+                //valueFloat = float.Parse(i.Value, System.Globalization.NumberStyles.AllowDecimalPoint,
+                //    System.Globalization.NumberFormatInfo.InvariantInfo);
 
                 if (valueFloat < minimumValue)
                 {
@@ -1080,7 +1295,7 @@ namespace GameStatisticsWebApp.Controllers
             games.Add(0, "Cave Game");
             games.Add(1, "Bubble Runner");
             //add one more game 
-            games.Add(2, "Squat Pong");
+            games.Add(2, "Hat Trick");
 
             return games;
 

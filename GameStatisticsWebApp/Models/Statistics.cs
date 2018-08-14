@@ -21,6 +21,21 @@ namespace GameStatisticsWebApp.Models
         public float MoveRangeMaximum { get; set; }
         public TimeSpan PauseLength { get; set; }
         public int NumberOfPauses { get; set; }
+        public TimeSpan TimeKeptBodyOnRight { get; set; }
+
+        public TimeSpan TimeKeptBodyOnLeft { get; set; }
+
+        public TimeSpan TimeKeptBodyNeutral { get; set; }
+
+        public List<DateTime> test2 { get; set; }
+
+        public List<int> weekRepetitions { get; set; }
+
+        public List<TimeSpan> weekTotalPlayingTime { get; set; }
+
+        public List<float> weekMovementVelocity { get; set; }
+
+        public List<string> weekDate { get; set; }
 
     }
 }
