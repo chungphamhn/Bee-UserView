@@ -236,6 +236,7 @@ namespace GameStatisticsWebApp.Controllers
             XmlReader reader = command.ExecuteXmlReader();
             xpathDoc = new XPathDocument(reader, XmlSpace.Preserve);
 
+
             //create a navigator to iterate through nodes
             //String variables are the different nodes to iterate through
             nav = xpathDoc.CreateNavigator();
@@ -354,10 +355,12 @@ namespace GameStatisticsWebApp.Controllers
 
             SqlCommand command = GetSqlDailyCommand(conn, userId);
 
+
             //create XML reader and XPathDocument to read the XML
             XmlReader reader = command.ExecuteXmlReader();
             xpathDoc = new XPathDocument(reader, XmlSpace.Preserve);
-
+            string xml = "";
+            xml = command.ExecuteScalar().ToString();
             //create a navigator to iterate through nodes
             //String variables are the different nodes to iterate through
             nav = xpathDoc.CreateNavigator();
@@ -377,7 +380,6 @@ namespace GameStatisticsWebApp.Controllers
             endTimeString = "./endTime";
             gameString = "./gameID";
 
-
             //Node iterator for user
             NodeIter = nav.Select(strExpression + "[playerID=" + userId + "]");
 
@@ -392,6 +394,7 @@ namespace GameStatisticsWebApp.Controllers
                 Node = item.Select(dateString);
                 dateInput = GetStringValue(Node);
                 parsedDate = DateTime.Parse(dateInput);
+
 
                 //create only new statisticsDate when then last date was not the same date as the new one -> otherwise it would create a new date for each session, even when it's the same date
                 if (lastDate.Date != parsedDate.Date) {
@@ -428,6 +431,8 @@ namespace GameStatisticsWebApp.Controllers
                     //for each date iterate through and save statistics for game
                     foreach (XPathNavigator gameItem in NodeGame) {
                         statistics = new Statistics() { Name = "User Statistics" };
+
+                        statistics.test = xml;
 
                         //select repetitions nodes
                         Node = dateItem.Select(repetitions);

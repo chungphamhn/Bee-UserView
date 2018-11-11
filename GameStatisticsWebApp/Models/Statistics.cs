@@ -37,5 +37,7 @@ namespace GameStatisticsWebApp.Models
 
         public List<string> weekDate { get; set; }
 
+        public string test { get; set; }
+
     }
 }

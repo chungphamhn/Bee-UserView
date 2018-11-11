@@ -85,7 +85,10 @@
                 double[] movementVelocity = new double[gameItem.Statistics.Count];
                 //TimeSpan[] totalPlayingTime = new TimeSpan[gameItem.Statistics.Count];
                 double[] totalPlayingTime = new double[gameItem.Statistics.Count];
-
+                string xml = "";
+                foreach (var statisticsItem in gameItem.Statistics) {
+                    xml = statisticsItem.test;
+                }
 
                 <a><br /></a>
                 <a class="list-group-item active">
@@ -102,7 +105,30 @@
                     <div align="center">
                         <button class="button">Show Chart</button>
                         <button class="button2">Show Table</button>
-                        <button>Download</button>
+                        <button onclick="downloadXml('xml')">Download</button>
+
+
+
+                        <script>
+
+                            function downloadXml(filename) {
+
+                                var text = "<ArrayOfCompletedSession><playerID>0</playerID><id>0</id><gameID>1</gameID><sessionTime>23.3414955</sessionTime><time>2018-05-02T19:07:05.4112887+03:00</time><repetitions>10</repetitions><gameScore>0</gameScore> //float<moveMinimumValue>0</moveMinimumValue> //float<moveMaximumValue>90</moveMaximumValue> //float<moveTargetValue>0.85</moveTargetValue> //float<gamePauses><SessionPause><startTime>2018-05-03T15:06:37.7900304+03:00</startTime><endTime>2018-05-03T15:06:43.5243491+03:00</endTime></SessionPause></gamePauses> <moveVelocityAverage>0.0183336</moveVelocityAverage> //float<moveRangeAverage>0.7308038</moveRangeAverage> //float<moveRangeMinimum>0</moveRangeMinimum> //float<moveRangeMaximum>1</moveRangeMaximum> //float</CompletedSession ></ArrayOfCompletedSession >";
+                                var element = document.createElement('a');
+                                var test = "@xml";
+                                //element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent("@xml"));
+                                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + test);
+                                element.setAttribute('download', filename);
+
+                                element.style.display = 'none';
+                                document.body.appendChild(element);
+
+                                element.click();
+
+                                document.body.removeChild(element);
+                            }
+                        </script>
+                       
                     </div>
 
 
@@ -122,6 +148,7 @@
                             <div id="@totalPlayingTimeId"></div>
                         </div>
                     </div>
+                    
                     <div class="table">
                         <a><br /></a>
                         <table align="center">
@@ -140,6 +167,7 @@
                                 totalPlayingTime[count] = Math.Round(statisticsItem.TotalPlayingTime.TotalMinutes, 2);
                                 movementVelocity[count] = Math.Round(statisticsItem.MoveVelocityAverage, 2);
                                 count++;
+
                                 //double dval = totalPlayingTime[0].TotalMinutes;
                                 <tr>
                                     <th>@count</th>
@@ -469,6 +497,7 @@
     }
 </div>
 <script>
+
     $(document).ready(function () {
         $(".displayChart").click(function () {
             var index = $(".displayChart").index(this);
