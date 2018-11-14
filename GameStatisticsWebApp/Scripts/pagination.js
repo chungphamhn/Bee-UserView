@@ -7,7 +7,8 @@
     $(".pagination").append("<li class='current-page active'><a href='javascript:void(0)'>" + 1 + "</a></li>"); // Add first page marker
 
     // Loop to insert page number for each sets of items equal to page limit (e.g., limit of 4 with 20 total items = insert 5 pages)
-    for (var i = 2; i <= totalPages; i++) {
+for (var i = 2; i <= totalPages; i++) {
+
         $(".pagination").append("<li class='current-page'><a href='javascript:void(0)'>" + i + "</a></li>"); // Insert page number into pagination tabs
     }
 
@@ -16,6 +17,8 @@
 
 // Function that displays new items based on page number that was clicked
 $(".pagination li.current-page").on("click", function () {
+
+
     // Check if page number that was clicked on is the current page that is being displayed
     if ($(this).hasClass('active')) {
         return false; // Return false (i.e., nothing to do, since user clicked on the page number that is already being displayed)
@@ -30,6 +33,7 @@ $(".pagination li.current-page").on("click", function () {
         for (var i = grandTotal - limitPerPage; i < grandTotal; i++) {
             $("#loop .list-group:eq(" + i + ")").show(); // Show items from the new page that was selected
         }
+        alert(totalPages);
     }
 
 });

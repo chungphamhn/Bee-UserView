@@ -79,8 +79,10 @@ namespace GameStatisticsWebApp.Controllers
         // GET: Statistics
         public ActionResult Index()
         {
-            var statistics = new Statistics() { Name = "Game statistics" };
-            return View(statistics);
+            //var userId = Int16.Parse(fc[0].ToString());
+            var userId = 0;
+
+            return RedirectToAction("ShowDailyUserStatistics", "Statistics", new { userId });
 
         }
 
@@ -92,9 +94,13 @@ namespace GameStatisticsWebApp.Controllers
 
         public ActionResult User()
         {
-            var statistics = new Statistics() { Name = "User Statistics" };
+            //var statistics = new Statistics() { Name = "User Statistics" };
 
-            return View(statistics);
+            //return View(statistics);
+
+            var userId = 0;
+
+            return RedirectToAction("ShowDailyUserStatistics", "Statistics", new { userId });
         }
 
         //action result to show user statistics (default call of user statistics)
@@ -102,6 +108,7 @@ namespace GameStatisticsWebApp.Controllers
         public ActionResult ShowUserStatistics(FormCollection fc)
         {
             var userId = Int16.Parse(fc[0].ToString());
+            //var userId = 1;
 
             return RedirectToAction("ShowDailyUserStatistics", "Statistics", new { userId });
         }
@@ -118,6 +125,7 @@ namespace GameStatisticsWebApp.Controllers
         //show daily user statistics, returns viewmodel to view
         public ActionResult ShowDailyUserStatistics(int userId)
         {
+            //userId = 1;
             //get the daily statistics and store them in list
             statisticsDateList = GetDailyUserStatistics(userId);
 
